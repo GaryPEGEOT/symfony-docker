@@ -25,6 +25,8 @@ RUN set -eux; \
 	    $PHPIZE_DEPS \
 	    icu-dev \
 	    libzip-dev \
+		oniguruma-dev \
+		curl-dev \
 		postgresql-dev \
 	    zlib-dev \
 	; \
