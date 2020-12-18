@@ -10,8 +10,6 @@ services:
       # - ./var:/srv/app/var:rw
     environment:
       APP_ENV: dev
-
-  caddy:
-    volumes:
-      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./public:/srv/app/public:ro
+  web:
+      ports:
+      - 8000:80

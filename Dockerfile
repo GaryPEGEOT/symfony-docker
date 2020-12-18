@@ -5,7 +5,6 @@
 
 # https://docs.docker.com/engine/reference/builder/#understand-how-arg-and-from-interact
 ARG PHP_VERSION=8.0
-ARG CADDY_VERSION=2
 
 # "php" stage
 FROM php:${PHP_VERSION}-fpm-alpine AS symfony_php
@@ -32,7 +31,9 @@ RUN set -eux; \
 	\
 	docker-php-ext-configure zip; \
 	docker-php-ext-install -j$(nproc) \
+		curl \
 	    intl \
+		mbstring \
 		pdo_pgsql \
 	    zip \
 	; \
@@ -108,19 +109,11 @@ RUN chmod +x /usr/local/bin/docker-entrypoint
 ENTRYPOINT ["docker-entrypoint"]
 CMD ["php-fpm"]
 
-FROM caddy:${CADDY_VERSION}-builder-alpine AS symfony_caddy_builder
+FROM symfony_php as symfony_php_debug
 
-RUN xcaddy build \
-    --with github.com/dunglas/mercure@main \
-    --with github.com/dunglas/mercure/caddy@main \
-    --with github.com/dunglas/vulcain/caddy
-
-FROM caddy:${CADDY_VERSION} AS symfony_caddy
-
-WORKDIR /srv/app
-
-ENV MERCURE_DEMO="demo /srv/mercure-assets/"
-COPY --from=dunglas/mercure:v0.11 /srv/public /srv/mercure-assets/
-COPY --from=symfony_caddy_builder /usr/bin/caddy /usr/bin/caddy
-COPY --from=symfony_php /srv/app/public public/
-COPY docker/caddy/Caddyfile /etc/caddy/Caddyfile
+RUN set -eux; \
+	apk add --no-cache --virtual .build-deps $PHPIZE_DEPS; \
+	pecl install xdebug; \
+	docker-php-ext-enable xdebug; \
+	pecl clear-cache; \
+	apk del .build-deps
