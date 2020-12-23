@@ -26,4 +26,6 @@ jobs:
                       unhealthy) exit 1;;
                     esac
                   done
-                  exit 1           
+                  exit 1
+            - name: Check HTTP reachability
+              run: curl http://localhost:8000
