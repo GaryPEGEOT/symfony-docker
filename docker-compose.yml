@@ -35,3 +35,7 @@ services:
       - POSTGRES_USER=symfony
     volumes:
       - db_data:/var/lib/postgresql/data:rw
+      - ./docker/db/dump:/docker-entrypoint-initdb.d
+
+volumes:  
+  db_data:
