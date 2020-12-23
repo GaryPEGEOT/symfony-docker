@@ -3,15 +3,30 @@ version: "3.4"
 # Development environment override
 services:
   php:
-    volumes:
-      - ./:/srv/app:rw,cached
-      - ./docker/php/conf.d/symfony.dev.ini:/usr/local/etc/php/conf.d/symfony.ini
-      # If you develop on Linux, comment out the following volumes to just use bind-mounted project directory from host
-      # - ./var:/srv/app/var:rw
-    environment:
-      APP_ENV: dev
-
-  caddy:
-    volumes:
-      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./public:/srv/app/public:ro
+      build:
+        context: .
+        target: symfony_php_debug
+      environment:
+        # See https://docs.docker.com/docker-for-mac/networking/#i-want-to-connect-from-a-container-to-a-service-on-the-host
+        # See https://github.com/docker/for-linux/issues/264
+        XDEBUG_MODE: debug        
+        XDEBUG_CONFIG: >-
+          discover_client_host=yes
+        # This should correspond to the server declared in PHPStorm `Preferences | Languages & Frameworks | PHP | Servers`
+        # Then PHPStorm will use the corresponding path mappings
+        PHP_IDE_CONFIG: serverName=symfony
+      volumes:
+        - ./:/srv/app:rw,cached
+        - ./docker/php/conf.d/symfony.dev.ini:/usr/local/etc/php/conf.d/symfony.ini
+        # If you develop on Linux, comment out the following volumes to just use bind-mounted project directory from host
+        # - ./var:/srv/app/var:rw
+      
+  web:
+      ports:
+      - 8000:80
+  
+  database:
+    ports:
+      - target: 5432
+        published: 5432
+        protocol: tcp
